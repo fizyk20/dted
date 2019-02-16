@@ -1,5 +1,6 @@
 use std::convert::From;
 
+#[derive(Debug, Clone, Copy)]
 pub struct Angle {
     pub deg: i16,
     pub min: u8,
