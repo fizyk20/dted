@@ -56,7 +56,9 @@ fn bytes_to_num(bytes: &[u8]) -> u32 {
 
 named!(parse_dted_file <&[u8], DtedData>, do_parse!(
     header: parse_dted_header >>
-    records: count!(parse_record, header.num_lon_lines as usize) >>
+    records: count!(
+        |input| parse_record(input, header.num_lat_lines as usize),
+        header.num_lon_lines as usize) >>
     (DtedData { header, records })
 ));
 
@@ -106,13 +108,14 @@ named!(parse_u16_4char <&[u8], u16>,
     map!(take!(4), |chars| bytes_to_num(chars) as u16)
 );
 
-named!(parse_record <&[u8], DtedRecord>, do_parse!(
+named_args!(parse_record(line_len: usize) <&[u8], DtedRecord>, do_parse!(
     tag!(&[0xaa][..]) >>
     block_byte0: take!(1) >>
     block_rest: u16!(Endianness::Big) >>
     lon_count: u16!(Endianness::Big) >>
     lat_count: u16!(Endianness::Big) >>
-    elevations: count!(u16!(Endianness::Big), 3600) >>
+    elevations: count!(u16!(Endianness::Big), line_len) >>
+    take!(4) >> // checksum
     (DtedRecord {
         block_count: block_byte0[0] as u32 * 65536 + block_rest as u32,
         lon_count,
