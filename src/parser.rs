@@ -29,6 +29,7 @@ fn bytes_to_num(bytes: &[u8]) -> u32 {
 
 named!(parse_dted_file <&[u8], DtedData>, do_parse!(
     header: parse_dted_header >>
+    take!(648 + 2700) >> // DSI + ACC
     records: count!(
         |input| parse_record(input, header.num_lat_lines as usize),
         header.num_lon_lines as usize) >>
@@ -48,7 +49,6 @@ named!(parse_dted_header <&[u8], DtedHeader>, do_parse!(
     num_lon_lines: parse_u16_4char >>
     num_lat_lines: parse_u16_4char >>
     take!(25) >>    // rest of UHL
-    take!(648 + 2700) >> // DSI + ACC
     (DtedHeader {
         origin_lon,
         origin_lat,
@@ -123,5 +123,14 @@ pub fn read_dted<P: AsRef<Path>>(path: P) -> Result<DtedData, Error> {
     file.read_to_end(&mut content)?;
 
     let data = parse_dted_file(&content)?.1;
+    Ok(data)
+}
+
+pub fn read_dted_header<P: AsRef<Path>>(path: P) -> Result<DtedHeader, Error> {
+    let file = File::open(path)?;
+    let mut content = Vec::new();
+    file.take(80).read_to_end(&mut content)?;
+
+    let data = parse_dted_header(&content)?.1;
     Ok(data)
 }
