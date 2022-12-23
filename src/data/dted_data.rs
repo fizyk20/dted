@@ -96,6 +96,7 @@ impl IntoIterator for DtedData {
     type Item = (f64, f64, Option<f64>);
     type IntoIter = DtedDataIntoIterator;
 
+    /// Returns an iterator over the (lat, long, elevation) of all points in DTED file.
     fn into_iter(self) -> Self::IntoIter {
         DtedDataIntoIterator {
             dted_data: self,
