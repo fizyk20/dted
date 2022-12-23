@@ -92,3 +92,38 @@ impl DtedData {
         Some(result)
     }
 }
+impl IntoIterator for DtedData {
+    type Item = (f64, f64, Option<f64>);
+    type IntoIter = DtedDataIntoIterator;
+
+    fn into_iter(self) -> Self::IntoIter {
+        DtedDataIntoIterator {
+            dted_data: self,
+            lon_index: 0,
+            lat_index: 0,
+        }
+    }
+}
+pub struct DtedDataIntoIterator {
+    dted_data: DtedData,
+    lon_index: usize,
+    lat_index: usize,
+}
+impl Iterator for DtedDataIntoIterator {
+    type Item = (f64, f64, Option<f64>);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.lon_index >= self.dted_data.header.num_lon_lines as usize-1 {
+            return None;
+        }
+        let lon = self.dted_data.min_lon() + self.lon_index as f64 * self.dted_data.lon_interval();
+        let lat = self.dted_data.min_lat() + self.lat_index as f64 * self.dted_data.lat_interval();
+        let elev = Some(self.dted_data.records[self.lon_index].elevations[self.lat_index] as f64);
+        self.lat_index += 1;
+        if self.lat_index >= self.dted_data.header.num_lat_lines as usize-1 {
+            self.lat_index = 0;
+            self.lon_index += 1;
+        }
+        Some((lat, lon, elev))
+    }
+}
