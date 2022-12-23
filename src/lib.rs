@@ -33,3 +33,15 @@ fn test_read_header_only() {
     assert_eq!(header.num_lat_lines, 3601);
     assert_eq!(header.num_lon_lines, 3601);
 }
+
+#[test]
+fn test_iterator() {
+    let data_1 = read_dted("test_data/test_data.dt2").unwrap();
+    let data_2 = read_dted("test_data/test_data.dt2").unwrap();
+    for (lat, lon, elev) in data_1.into_iter() {
+        // floating point errors in get_level so round
+        let elev = elev.unwrap().round();
+        let elev_get = data_2.get_elev(lat, lon).unwrap().round();
+        assert_eq!(elev, elev_get);
+    }
+}
