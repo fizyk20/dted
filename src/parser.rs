@@ -43,7 +43,7 @@ named!(parse_dted_header <&[u8], DtedHeader>, do_parse!(
     lon_interval: parse_u16_4char >>
     lat_interval: parse_u16_4char >>
     accuracy: alt!(
-        tag!(b"NA$$") => { |_| None } |
+        is_na => { |_| None } |
         parse_u16_4char => { |num| Some(num) }) >>
     take!(15) >>
     num_lon_lines: parse_u16_4char >>
@@ -79,6 +79,12 @@ named!(parse_angle <&[u8], Angle>, do_parse!(
 
 named!(parse_u16_4char <&[u8], u16>,
     map!(take!(4), |chars| bytes_to_num(chars) as u16)
+);
+
+named!(is_na <&[u8], bool>,
+    map!(take!(4), |chars| {
+        chars[0] == b'N' && chars[1] == b'A'
+    })
 );
 
 named_args!(parse_record(line_len: usize) <&[u8], DtedRecord>, do_parse!(
